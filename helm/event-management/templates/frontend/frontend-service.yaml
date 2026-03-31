@@ -1,0 +1,14 @@
+{{- if .Values.services.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - port: {{ .Values.services.frontend.port }}
+      targetPort: {{ .Values.services.frontend.port }}
+{{- end }}

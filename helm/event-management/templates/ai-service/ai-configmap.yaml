@@ -1,0 +1,11 @@
+{{- if .Values.services.ai.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  {{- range $key, $value := .Values.services.ai.env }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}
+{{- end }}

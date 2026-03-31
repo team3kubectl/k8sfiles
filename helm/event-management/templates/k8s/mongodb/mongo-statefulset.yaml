@@ -1,0 +1,70 @@
+{{- if .Values.infrastructure.mongodb.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: events-mongodb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: mongodb
+spec:
+  serviceName: events-mongodb
+  replicas: {{ .Values.infrastructure.mongodb.replicas }}
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: {{ .Values.infrastructure.mongodb.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command:
+            - mongod
+            - "--bind_ip_all"
+          ports:
+            - containerPort: {{ .Values.infrastructure.mongodb.port }}
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+          livenessProbe:
+            exec:
+              command:
+              - mongosh
+              - --eval
+              - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+              - mongosh
+              - --eval
+              - "db.adminCommand('ping')"
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: {{ .Values.infrastructure.mongodb.resources.requests.cpu | quote }}
+              memory: {{ .Values.infrastructure.mongodb.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.infrastructure.mongodb.resources.limits.cpu | quote }}
+              memory: {{ .Values.infrastructure.mongodb.resources.limits.memory | quote }}
+          envFrom:
+            - secretRef:
+                name: mongodb-secret
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: team3-storageclass
+        resources:
+          requests:
+            storage: {{ .Values.infrastructure.mongodb.storage }}
+{{- end }}

@@ -1,0 +1,11 @@
+{{- if .Values.services.payment.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-configmap
+  namespace: {{ .Values.global.namespace }}
+data:
+  {{- range $key, $value := .Values.services.payment.env }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}
+{{- end }}

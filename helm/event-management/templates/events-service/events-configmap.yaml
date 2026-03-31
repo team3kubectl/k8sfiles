@@ -1,0 +1,11 @@
+{{- if .Values.services.events.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: events-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  {{- range $key, $value := .Values.services.events.env }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}
+{{- end }}

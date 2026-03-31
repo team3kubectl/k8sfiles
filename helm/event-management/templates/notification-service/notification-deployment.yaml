@@ -1,0 +1,64 @@
+{{- if .Values.services.notification.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-deployment
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: notification
+  replicas: {{ .Values.services.notification.replicas }}
+  {{- if .Values.services.notification.minReadySeconds }}
+  minReadySeconds: {{ .Values.services.notification.minReadySeconds }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.services.notification.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.services.notification.strategy.maxUnavailable }}
+      maxSurge: {{ .Values.services.notification.strategy.maxSurge }}
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      {{- if .Values.services.notification.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.services.notification.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+      - name: notification-container
+        image: {{ .Values.services.notification.image }}
+        imagePullPolicy: {{ .Values.services.notification.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.services.notification.port }}
+        envFrom:
+        - configMapRef:
+            name: notification-configmap
+        - secretRef:
+            name: notification-secret
+        resources:
+          requests:
+            cpu: {{ .Values.services.notification.resources.requests.cpu | quote }}
+            memory: {{ .Values.services.notification.resources.requests.memory | quote }}
+          limits:
+            cpu: {{ .Values.services.notification.resources.limits.cpu | quote }}
+            memory: {{ .Values.services.notification.resources.limits.memory | quote }}
+        {{- if .Values.services.notification.probes.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.services.notification.probes.readiness.path }}
+            port: {{ .Values.services.notification.port }}
+          initialDelaySeconds: {{ .Values.services.notification.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.services.notification.probes.readiness.periodSeconds }}
+          failureThreshold: {{ .Values.services.notification.probes.readiness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.services.notification.probes.liveness.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.services.notification.probes.liveness.path }}
+            port: {{ .Values.services.notification.port }}
+          initialDelaySeconds: {{ .Values.services.notification.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.services.notification.probes.liveness.periodSeconds }}
+          failureThreshold: {{ .Values.services.notification.probes.liveness.failureThreshold }}
+        {{- end }}
+{{- end }}

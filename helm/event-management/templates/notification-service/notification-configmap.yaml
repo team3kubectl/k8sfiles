@@ -1,0 +1,11 @@
+{{- if .Values.services.notification.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-configmap
+  namespace: {{ .Values.global.namespace }}
+data:
+  {{- range $key, $value := .Values.services.notification.env }}
+  {{ $key }}: "{{ $value }}"
+  {{- end }}
+{{- end }}

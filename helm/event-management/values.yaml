@@ -1,0 +1,534 @@
+# Default values for event-management Helm chart
+# ALL VALUES EXTRACTED FROM ACTUAL k8sfiles CONFIGURATION
+# Last Updated: March 31, 2026
+
+# ============================================
+# GLOBAL SETTINGS
+# ============================================
+global:
+  namespace: "team3-ns"
+  imagePullPolicy: "Always"
+
+registry:
+  name: "team3kubectl"
+
+# ============================================
+# DATABASE CONFIGURATION
+# ============================================
+databases:
+  postgres:
+    enabled: true
+    image: "postgres:15"
+    replicas: 1
+    port: 5432
+    service:
+      name: "postgres-db"
+      type: "ClusterIP"
+    secrets:
+      db_user: "admin"
+      db_password: "adminpass"
+    storage: "5Gi"
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+
+  mongodb:
+    enabled: true
+    image: "mongo:6.0"
+    replicas: 1
+    port: 27017
+    service:
+      name: "events-mongodb"
+      type: "ClusterIP"
+    secrets:
+      root_username: "admin"
+      root_password: "adminpass"
+    storage: "5Gi"
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+
+# ============================================
+# CACHE & MESSAGE QUEUE
+# ============================================
+infrastructure:
+  rabbitmq:
+    enabled: true
+    image: "rabbitmq:3.12-management"
+    replicas: 1
+    port: 5672
+    managementPort: 15672
+    service:
+      type: "ClusterIP"
+    secrets:
+      username: "guest"
+      password: "guest"
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+
+  redis:
+    enabled: true
+    image: "redis:7.0-alpine"
+    replicas: 1
+    port: 6379
+    service:
+      name: "notification-redis"
+      type: "ClusterIP"
+    storage: "3Gi"
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+
+# ============================================
+# MICROSERVICES - EXACT VALUES FROM k8sfiles
+# ============================================
+services:
+  
+  # -------- USERS SERVICE --------
+  users:
+    enabled: true
+    replicas: 1
+    image: "team3kubectl/users-service:v1.1.1"
+    imagePullPolicy: "IfNotPresent"
+    port: 8001
+    minReadySeconds: 10
+    terminationGracePeriodSeconds: 30
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 0
+      maxSurge: 1
+    
+    env:
+      PORT: "8001"
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "postgres"
+      USERS_SERVICE_URL: "http://users-service:8001"
+      EVENTS_SERVICE_URL: "http://events-service:8002"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+    
+    secrets:
+      DB_USER: "admin"
+      DB_PASSWORD: "adminpass"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    
+    probes:
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- EVENTS SERVICE --------
+  events:
+    enabled: true
+    replicas: 3
+    image: "team3kubectl/events-service:v1.1.0"
+    imagePullPolicy: "Always"
+    port: 8002
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 1
+      maxSurge: 1
+    
+    env:
+      PORT: "8002"
+      MONGO_HOST: "events-mongodb"
+      MONGO_PORT: "27017"
+      MONGO_DB: "events_db"
+      MONGO_URI: "mongodb://events-mongodb:27017/?maxPoolSize=10"
+    
+    secrets:
+      MONGO_USER: "admin"
+      MONGO_PASSWORD: "adminpass"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
+    
+    probes:
+      startup:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 30
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- BOOKING SERVICE --------
+  booking:
+    enabled: true
+    replicas: 2
+    image: "team3kubectl/booking-service:v1.1.1"
+    imagePullPolicy: "Always"
+    port: 8003
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    
+    env:
+      PORT: "8003"
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "booking_db"
+      EVENTS_SERVICE_URL: "http://events-service:8002"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+    
+    secrets:
+      DB_USER: "admin"
+      DB_PASSWORD: "adminpass"
+      RABBITMQ_USER: "guest"
+      RABBITMQ_PASSWORD: "guest"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    
+    probes:
+      startup:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 30
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 20
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- PAYMENT SERVICE --------
+  payment:
+    enabled: true
+    replicas: 3
+    image: "team3kubectl/payment-service:v1.1.1"
+    imagePullPolicy: "IfNotPresent"
+    port: 8004
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: "25%"
+      maxSurge: "25%"
+    
+    env:
+      PORT: "8004"
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "payment_db"
+      BOOKING_SERVICE_URL: "http://booking-service:8003"
+      TICKET_SERVICE_URL: "http://ticket-service:8005"
+    
+    secrets:
+      DB_USER: "admin"
+      DB_PASSWORD: "adminpass"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
+    
+    probes:
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 20
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- TICKET SERVICE --------
+  ticket:
+    enabled: true
+    replicas: 2
+    image: "team3kubectl/ticket-service:v1.1.1"
+    imagePullPolicy: "Always"
+    port: 8005
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 1
+      maxSurge: 1
+    
+    env:
+      PORT: "8005"
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "ticket_db"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:8006"
+    
+    secrets:
+      DB_USER: "admin"
+      DB_PASSWORD: "adminpass"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    
+    probes:
+      readiness:
+        enabled: false
+      liveness:
+        enabled: false
+
+  # -------- NOTIFICATION SERVICE --------
+  notification:
+    enabled: true
+    replicas: 1
+    image: "team3kubectl/notification-service:v1.1.1"
+    imagePullPolicy: "Always"
+    port: 8006
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 0
+      maxSurge: 1
+    
+    env:
+      PORT: "8006"
+      REDIS_HOST: "notification-redis"
+      REDIS_PORT: "6379"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+    
+    secrets:
+      RABBITMQ_USER: "guest"
+      RABBITMQ_PASSWORD: "guest"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    
+    probes:
+      readiness:
+        enabled: false
+      liveness:
+        enabled: false
+
+  # -------- AI SERVICE --------
+  ai:
+    enabled: true
+    replicas: 3
+    image: "team3kubectl/ai-service:v1.1.0"
+    imagePullPolicy: "Always"
+    port: 8007
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 1
+      maxSurge: 1
+    
+    env:
+      PORT: "8007"
+      GEMINI_MODEL: "gemini-flash-latest"
+    
+    secrets:
+      GEMINI_API_KEY: "AIzaSyAgTVfQjuMBG55-nm-ve3ps5ztYfzgy-Fw"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
+    
+    probes:
+      startup:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 30
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- ADMIN SERVICE --------
+  admin:
+    enabled: true
+    replicas: 1
+    image: "team3kubectl/admin-service:v1.1.1"
+    imagePullPolicy: "Always"
+    port: 8008
+    
+    strategy:
+      type: "RollingUpdate"
+      maxUnavailable: 1
+      maxSurge: 1
+    
+    env:
+      NODE_ENV: "production"
+      PORT: "8008"
+      DB_HOST: "postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "eventdb"
+      JWT_EXPIRES_IN: "1d"
+    
+    secrets:
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      JWT_SECRET: "secret123"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
+    
+    probes:
+      readiness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 10
+        periodSeconds: 5
+        failureThreshold: 3
+      liveness:
+        enabled: true
+        path: "/health"
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        failureThreshold: 3
+
+  # -------- FRONTEND --------
+  frontend:
+    enabled: true
+    replicas: 2
+    image: "team3kubectl/frontend:v1.1.1"
+    imagePullPolicy: "Always"
+    port: 80
+    
+    env:
+      NODE_ENV: "production"
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+    
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+
+# ============================================
+# GATEWAY CONFIGURATION
+# ============================================
+gateway:
+  enabled: true
+  name: "event-gateway"
+  namespace: "team3-ns"
+  gatewayClassName: "kgateway"
+  listeners:
+    - name: "http"
+      protocol: "HTTP"
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: "Same"
+  annotations:
+    networking.istio.io/service-type: "LoadBalancer"
+
+# ============================================
+# STORAGE CLASSES
+# ============================================
+storage:
+  className: "team3-storageclass"
+  provisioner: "nfs.csi.k8s.io"
+  nfs:
+    server: "172.31.1.125"
+    share: "/var/nfs/team3"
+  volumeBindingMode: "Immediate"

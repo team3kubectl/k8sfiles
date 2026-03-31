@@ -1,0 +1,16 @@
+{{- if .Values.infrastructure.mongodb.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-mongodb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: mongodb
+spec:
+  clusterIP: None
+  selector:
+    app: mongodb
+  ports:
+    - port: {{ .Values.infrastructure.mongodb.port }}
+      targetPort: {{ .Values.infrastructure.mongodb.port }}
+{{- end }}

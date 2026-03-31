@@ -1,0 +1,30 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.global.namespace }}
+  {{- if .Values.gateway.annotations }}
+  annotations:
+    {{- range $key, $value := .Values.gateway.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ .Values.gateway.gatewayClassName }}
+  {{- if .Values.gateway.listeners }}
+  listeners:
+    {{- range .Values.gateway.listeners }}
+    - name: {{ .name }}
+      protocol: {{ .protocol }}
+      port: {{ .port }}
+      {{- if .allowedRoutes }}
+      allowedRoutes:
+        {{- if .allowedRoutes.namespaces }}
+        namespaces:
+          from: {{ .allowedRoutes.namespaces.from }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}

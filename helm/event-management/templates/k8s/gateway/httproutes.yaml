@@ -1,0 +1,70 @@
+{{- if .Values.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: users-route
+  namespace: {{ .Values.global.namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/users
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: users-service
+          port: {{ .Values.services.users.port }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: events-route
+  namespace: {{ .Values.global.namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/events
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: events-service
+          port: {{ .Values.services.events.port }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: bookings-route
+  namespace: {{ .Values.global.namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/bookings
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: booking-service
+          port: {{ .Values.services.booking.port }}
+{{- end }}

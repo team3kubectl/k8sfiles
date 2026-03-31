@@ -1,0 +1,66 @@
+{{- if .Values.services.admin.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-deployment
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: admin-service
+spec:
+  replicas: {{ .Values.services.admin.replicas }}
+  {{- if .Values.services.admin.minReadySeconds }}
+  minReadySeconds: {{ .Values.services.admin.minReadySeconds }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.services.admin.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.services.admin.strategy.maxUnavailable }}
+      maxSurge: {{ .Values.services.admin.strategy.maxSurge }}
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      {{- if .Values.services.admin.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.services.admin.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: admin-service
+          image: {{ .Values.services.admin.image }}
+          imagePullPolicy: {{ .Values.services.admin.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.admin.port }}
+          envFrom:
+            - configMapRef:
+                name: admin-config
+            - secretRef:
+                name: admin-secret
+          resources:
+            requests:
+              cpu: {{ .Values.services.admin.resources.requests.cpu | quote }}
+              memory: {{ .Values.services.admin.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.services.admin.resources.limits.cpu | quote }}
+              memory: {{ .Values.services.admin.resources.limits.memory | quote }}
+          {{- if .Values.services.admin.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.services.admin.probes.readiness.path }}
+              port: {{ .Values.services.admin.port }}
+            initialDelaySeconds: {{ .Values.services.admin.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.admin.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.services.admin.probes.readiness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.services.admin.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.services.admin.probes.liveness.path }}
+              port: {{ .Values.services.admin.port }}
+            initialDelaySeconds: {{ .Values.services.admin.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.admin.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.services.admin.probes.liveness.failureThreshold }}
+          {{- end }}
+{{- end }}

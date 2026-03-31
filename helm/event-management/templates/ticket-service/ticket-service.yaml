@@ -1,0 +1,14 @@
+{{- if .Values.services.ticket.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: ticket
+  ports:
+    - port: {{ .Values.services.ticket.port }}
+      targetPort: {{ .Values.services.ticket.port }}
+{{- end }}

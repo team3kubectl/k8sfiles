@@ -1,0 +1,15 @@
+{{- if .Values.services.admin.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    app: admin-service
+  ports:
+    - port: {{ .Values.services.admin.port }}
+      targetPort: {{ .Values.services.admin.port }}
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

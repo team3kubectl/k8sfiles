@@ -1,0 +1,14 @@
+{{- if .Values.infrastructure.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+  namespace: {{ .Values.global.namespace }}
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: {{ .Values.infrastructure.postgres.port }}
+      targetPort: {{ .Values.infrastructure.postgres.port }}
+{{- end }}

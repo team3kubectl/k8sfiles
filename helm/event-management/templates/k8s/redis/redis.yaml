@@ -1,0 +1,56 @@
+{{- if .Values.infrastructure.redis.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  REDIS_HOST: "notification-redis"
+  REDIS_PORT: "{{ .Values.infrastructure.redis.port }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-redis
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    app: notification-redis
+  ports:
+  - port: {{ .Values.infrastructure.redis.port }}
+    targetPort: {{ .Values.infrastructure.redis.port }}
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: notification-redis
+  namespace: {{ .Values.global.namespace }}
+spec:
+  serviceName: notification-redis
+  replicas: {{ .Values.infrastructure.redis.replicas }}
+  selector:
+    matchLabels:
+      app: notification-redis
+  template:
+    metadata:
+      labels:
+        app: notification-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.infrastructure.redis.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.infrastructure.redis.port }}
+          envFrom:
+            - configMapRef:
+                name: redis-config
+          resources:
+            requests:
+              memory: {{ .Values.infrastructure.redis.resources.requests.memory | quote }}
+              cpu: {{ .Values.infrastructure.redis.resources.requests.cpu | quote }}
+            limits:
+              memory: {{ .Values.infrastructure.redis.resources.limits.memory | quote }}
+              cpu: {{ .Values.infrastructure.redis.resources.limits.cpu | quote }}
+{{- end }}

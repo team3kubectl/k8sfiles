@@ -1,0 +1,59 @@
+{{- if .Values.infrastructure.postgres.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+  namespace: {{ .Values.global.namespace }}
+spec:
+  serviceName: postgres-db
+  replicas: {{ .Values.infrastructure.postgres.replicas }}
+  minReadySeconds: 10
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: postgres
+          image: {{ .Values.infrastructure.postgres.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.infrastructure.postgres.port }}
+          resources:
+            requests:
+              cpu: {{ .Values.infrastructure.postgres.resources.requests.cpu | quote }}
+              memory: {{ .Values.infrastructure.postgres.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.infrastructure.postgres.resources.limits.cpu | quote }}
+              memory: {{ .Values.infrastructure.postgres.resources.limits.memory | quote }}
+          envFrom:
+            - configMapRef:
+                name: postgres-configmap
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-script
+          configMap:
+            name: postgres-init-script
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: team3-storageclass
+        resources:
+          requests:
+            storage: {{ .Values.infrastructure.postgres.storage }}
+{{- end }}

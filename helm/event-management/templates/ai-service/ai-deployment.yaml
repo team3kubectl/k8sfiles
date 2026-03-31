@@ -1,0 +1,75 @@
+{{- if .Values.services.ai.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-deployment
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: ai-service
+spec:
+  replicas: {{ .Values.services.ai.replicas }}
+  {{- if .Values.services.ai.minReadySeconds }}
+  minReadySeconds: {{ .Values.services.ai.minReadySeconds }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.services.ai.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.services.ai.strategy.maxUnavailable }}
+      maxSurge: {{ .Values.services.ai.strategy.maxSurge }}
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      {{- if .Values.services.ai.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.services.ai.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: ai-service
+          image: {{ .Values.services.ai.image }}
+          imagePullPolicy: {{ .Values.services.ai.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.ai.port }}
+          envFrom:
+            - configMapRef:
+                name: ai-config
+            - secretRef:
+                name: ai-secret
+          resources:
+            requests:
+              cpu: {{ .Values.services.ai.resources.requests.cpu | quote }}
+              memory: {{ .Values.services.ai.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ .Values.services.ai.resources.limits.cpu | quote }}
+              memory: {{ .Values.services.ai.resources.limits.memory | quote }}
+          {{- if .Values.services.ai.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.services.ai.probes.startup.path }}
+              port: {{ .Values.services.ai.port }}
+            initialDelaySeconds: {{ .Values.services.ai.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.ai.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.services.ai.probes.startup.failureThreshold }}
+          {{- end }}
+          {{- if .Values.services.ai.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.services.ai.probes.readiness.path }}
+              port: {{ .Values.services.ai.port }}
+            initialDelaySeconds: {{ .Values.services.ai.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.ai.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.services.ai.probes.readiness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.services.ai.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.services.ai.probes.liveness.path }}
+              port: {{ .Values.services.ai.port }}
+            initialDelaySeconds: {{ .Values.services.ai.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.ai.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.services.ai.probes.liveness.failureThreshold }}
+          {{- end }}
+{{- end }}

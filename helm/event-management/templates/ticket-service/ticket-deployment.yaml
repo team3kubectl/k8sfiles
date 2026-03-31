@@ -1,0 +1,64 @@
+{{- if .Values.services.ticket.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-deployment
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.services.ticket.replicas }}
+  {{- if .Values.services.ticket.minReadySeconds }}
+  minReadySeconds: {{ .Values.services.ticket.minReadySeconds }}
+  {{- end }}
+  strategy:
+    type: {{ .Values.services.ticket.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.services.ticket.strategy.maxUnavailable }}
+      maxSurge: {{ .Values.services.ticket.strategy.maxSurge }}
+  selector:
+    matchLabels:
+      app: ticket
+  template:
+    metadata:
+      labels:
+        app: ticket
+    spec:
+      {{- if .Values.services.ticket.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.services.ticket.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: ticket-container
+          image: {{ .Values.services.ticket.image }}
+          imagePullPolicy: {{ .Values.services.ticket.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.services.ticket.port }}
+          envFrom:
+            - configMapRef:
+                name: ticket-config
+            - secretRef:
+                name: ticket-secret
+          resources:
+            requests:
+              memory: {{ .Values.services.ticket.resources.requests.memory | quote }}
+              cpu: {{ .Values.services.ticket.resources.requests.cpu | quote }}
+            limits:
+              memory: {{ .Values.services.ticket.resources.limits.memory | quote }}
+              cpu: {{ .Values.services.ticket.resources.limits.cpu | quote }}
+          {{- if .Values.services.ticket.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.services.ticket.probes.readiness.path }}
+              port: {{ .Values.services.ticket.port }}
+            initialDelaySeconds: {{ .Values.services.ticket.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.ticket.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.services.ticket.probes.readiness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.services.ticket.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.services.ticket.probes.liveness.path }}
+              port: {{ .Values.services.ticket.port }}
+            initialDelaySeconds: {{ .Values.services.ticket.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.services.ticket.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.services.ticket.probes.liveness.failureThreshold }}
+          {{- end }}
+{{- end }}
