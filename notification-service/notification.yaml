@@ -8,7 +8,7 @@ spec:
     app: notification
   ports:
   - port: 8006
-    targetPort: 8006 # Corrected: Now matches containerPort
+    targetPort: 8006
   type: ClusterIP
 ---
 apiVersion: v1
@@ -18,9 +18,9 @@ metadata:
   namespace: team3-ns
 data:
   PORT: "8006"
-  REDIS_HOST: notification-redis
+  REDIS_HOST: "notification-redis"
   REDIS_PORT: "6379"
-  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_HOST: "rabbitmq"
   RABBITMQ_PORT: "5672"
 ---
 apiVersion: v1
