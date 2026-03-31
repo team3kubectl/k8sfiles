@@ -4,7 +4,7 @@ metadata:
   name: redis-config
   namespace: team3-ns
 data:
-  REDIS_HOST: notification-redis
+  REDIS_HOST: "notification-redis"
   REDIS_PORT: "6379"
 ---
 apiVersion: v1
