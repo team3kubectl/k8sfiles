@@ -8,17 +8,18 @@ data:
     #!/bin/bash
     set -e
 
-    create_databases() {
-        local database=$1
-        echo "Creating database '$database'"
-        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-            CREATE DATABASE $database;
-    EOSQL
-    }
+    echo "PostgreSQL Init Script Started - Creating Services Databases"
 
-    if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
-        echo "Creating multiple databases: $POSTGRES_MULTIPLE_DATABASES"
-        for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
-            create_databases $db
-        done
-    fi
+    # Create databases directly
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<EOF
+    CREATE DATABASE payment_db;
+    CREATE DATABASE booking_db;
+    CREATE DATABASE ticket_db;
+    CREATE DATABASE events_db;
+    CREATE DATABASE users_db;
+EOF
+
+    echo "✓ All databases created successfully"
+    
+    # Verify
+    psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "\\l" | grep -E "payment_db|booking_db|ticket_db|events_db|users_db"
