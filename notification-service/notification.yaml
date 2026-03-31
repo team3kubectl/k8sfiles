@@ -7,7 +7,7 @@ spec:
   selector:
     app: notification
   ports:
-  - port: 80
+  - port: 8006
     targetPort: 8006 # Corrected: Now matches containerPort
   type: ClusterIP
 ---
