@@ -10,13 +10,17 @@ data:
 
     echo "PostgreSQL Init Script Started - Creating Services Databases"
 
-    # Create databases directly
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<EOF
-    CREATE DATABASE IF NOT EXISTS payment_db;
-    CREATE DATABASE IF NOT EXISTS booking_db;
-    CREATE DATABASE IF NOT EXISTS ticket_db;
-    CREATE DATABASE IF NOT EXISTS events_db;
-    CREATE DATABASE IF NOT EXISTS users_db;
-EOF
+    # Function to create database if not exists
+    create_database() {
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -tc "SELECT 1 FROM pg_database WHERE datname = '$1'" | grep -q 1 || \
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "CREATE DATABASE $1"
+    }
 
-    echo "Databases created successfully"
+    # Create all databases
+    create_database payment_db
+    create_database booking_db
+    create_database ticket_db
+    create_database events_db
+    create_database users_db
+
+    echo "All databases created successfully"
