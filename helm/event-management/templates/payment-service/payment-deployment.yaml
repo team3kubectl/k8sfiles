@@ -43,15 +43,6 @@ spec:
             limits:
               cpu: {{ .Values.services.payment.resources.limits.cpu | quote }}
               memory: {{ .Values.services.payment.resources.limits.memory | quote }}
-          {{- if .Values.services.payment.probes.startup.enabled }}
-          startupProbe:
-            httpGet:
-              path: {{ .Values.services.payment.probes.startup.path }}
-              port: {{ .Values.services.payment.port }}
-            initialDelaySeconds: {{ .Values.services.payment.probes.startup.initialDelaySeconds }}
-            periodSeconds: {{ .Values.services.payment.probes.startup.periodSeconds }}
-            failureThreshold: {{ .Values.services.payment.probes.startup.failureThreshold }}
-          {{- end }}
           {{- if .Values.services.payment.probes.readiness.enabled }}
           readinessProbe:
             httpGet:
