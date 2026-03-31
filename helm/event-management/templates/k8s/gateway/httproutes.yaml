@@ -198,5 +198,5 @@ spec:
             value: /
       backendRefs:
         - name: frontend-service
-          port: {{ .Values.frontend.port }}
+          port: 80
 {{- end }}
