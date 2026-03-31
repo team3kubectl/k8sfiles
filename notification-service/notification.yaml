@@ -29,7 +29,7 @@ metadata:
   name: notification-secret
   namespace: team3-ns
 type: Opaque
-data:
+stringData:
   RABBITMQ_USER: "guest"
   RABBITMQ_PASSWORD: "guest"
 ---
