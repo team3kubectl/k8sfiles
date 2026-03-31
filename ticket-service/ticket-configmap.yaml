@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ticket-config
+  namespace: team3-ns
+data:
+  PORT: "8005"
+  DB_HOST: postgres-db
+  DB_PORT: "5432"
+  DB_NAME: ticket_db
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8006"
