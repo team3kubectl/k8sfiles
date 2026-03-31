@@ -1,4 +1,4 @@
-{{- if .Values.infrastructure.postgres.enabled }}
+{{- if .Values.databases.postgres.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -9,6 +9,6 @@ spec:
   selector:
     app: postgres
   ports:
-    - port: {{ .Values.infrastructure.postgres.port }}
-      targetPort: {{ .Values.infrastructure.postgres.port }}
+    - port: {{ .Values.databases.postgres.port }}
+      targetPort: {{ .Values.databases.postgres.port }}
 {{- end }}

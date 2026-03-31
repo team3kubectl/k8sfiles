@@ -1,4 +1,4 @@
-{{- if .Values.infrastructure.postgres.enabled }}
+{{- if .Values.databases.postgres.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Values.global.namespace }}
 spec:
   serviceName: postgres-db
-  replicas: {{ .Values.infrastructure.postgres.replicas }}
+  replicas: {{ .Values.databases.postgres.replicas }}
   minReadySeconds: 10
   updateStrategy:
     type: RollingUpdate
@@ -21,17 +21,17 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: postgres
-          image: {{ .Values.infrastructure.postgres.image }}
+          image: {{ .Values.databases.postgres.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           ports:
-            - containerPort: {{ .Values.infrastructure.postgres.port }}
+            - containerPort: {{ .Values.databases.postgres.port }}
           resources:
             requests:
-              cpu: {{ .Values.infrastructure.postgres.resources.requests.cpu | quote }}
-              memory: {{ .Values.infrastructure.postgres.resources.requests.memory | quote }}
+              cpu: {{ .Values.databases.postgres.resources.requests.cpu | quote }}
+              memory: {{ .Values.databases.postgres.resources.requests.memory | quote }}
             limits:
-              cpu: {{ .Values.infrastructure.postgres.resources.limits.cpu | quote }}
-              memory: {{ .Values.infrastructure.postgres.resources.limits.memory | quote }}
+              cpu: {{ .Values.databases.postgres.resources.limits.cpu | quote }}
+              memory: {{ .Values.databases.postgres.resources.limits.memory | quote }}
           envFrom:
             - configMapRef:
                 name: postgres-configmap
@@ -55,5 +55,5 @@ spec:
         storageClassName: team3-storageclass
         resources:
           requests:
-            storage: {{ .Values.infrastructure.postgres.storage }}
+            storage: {{ .Values.databases.postgres.storage }}
 {{- end }}

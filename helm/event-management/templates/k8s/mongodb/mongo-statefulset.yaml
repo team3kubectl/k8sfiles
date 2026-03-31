@@ -1,4 +1,4 @@
-{{- if .Values.infrastructure.mongodb.enabled }}
+{{- if .Values.databases.mongodb.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -8,7 +8,7 @@ metadata:
     app: mongodb
 spec:
   serviceName: events-mongodb
-  replicas: {{ .Values.infrastructure.mongodb.replicas }}
+  replicas: {{ .Values.databases.mongodb.replicas }}
   selector:
     matchLabels:
       app: mongodb
@@ -19,13 +19,13 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: {{ .Values.infrastructure.mongodb.image }}
+          image: {{ .Values.databases.mongodb.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           command:
             - mongod
             - "--bind_ip_all"
           ports:
-            - containerPort: {{ .Values.infrastructure.mongodb.port }}
+            - containerPort: {{ .Values.databases.mongodb.port }}
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
@@ -49,11 +49,11 @@ spec:
             timeoutSeconds: 5
           resources:
             requests:
-              cpu: {{ .Values.infrastructure.mongodb.resources.requests.cpu | quote }}
-              memory: {{ .Values.infrastructure.mongodb.resources.requests.memory | quote }}
+              cpu: {{ .Values.databases.mongodb.resources.requests.cpu | quote }}
+              memory: {{ .Values.databases.mongodb.resources.requests.memory | quote }}
             limits:
-              cpu: {{ .Values.infrastructure.mongodb.resources.limits.cpu | quote }}
-              memory: {{ .Values.infrastructure.mongodb.resources.limits.memory | quote }}
+              cpu: {{ .Values.databases.mongodb.resources.limits.cpu | quote }}
+              memory: {{ .Values.databases.mongodb.resources.limits.memory | quote }}
           envFrom:
             - secretRef:
                 name: mongodb-secret
@@ -66,5 +66,5 @@ spec:
         storageClassName: team3-storageclass
         resources:
           requests:
-            storage: {{ .Values.infrastructure.mongodb.storage }}
+            storage: {{ .Values.databases.mongodb.storage }}
 {{- end }}

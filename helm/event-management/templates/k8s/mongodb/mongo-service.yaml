@@ -1,4 +1,4 @@
-{{- if .Values.infrastructure.mongodb.enabled }}
+{{- if .Values.databases.mongodb.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,6 +11,6 @@ spec:
   selector:
     app: mongodb
   ports:
-    - port: {{ .Values.infrastructure.mongodb.port }}
-      targetPort: {{ .Values.infrastructure.mongodb.port }}
+    - port: {{ .Values.databases.mongodb.port }}
+      targetPort: {{ .Values.databases.mongodb.port }}
 {{- end }}
