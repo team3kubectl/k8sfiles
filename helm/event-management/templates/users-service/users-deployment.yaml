@@ -27,6 +27,10 @@ spec:
       {{- if .Values.services.users.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.services.users.terminationGracePeriodSeconds }}
       {{- end }}
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z postgres-db {{ .Values.databases.postgres.port }}; do echo waiting for postgres; sleep 2; done']
       containers:
         - name: users-service
           image: {{ .Values.services.users.image }}

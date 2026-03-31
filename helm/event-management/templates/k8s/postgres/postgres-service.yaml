@@ -5,7 +5,7 @@ metadata:
   name: postgres-db
   namespace: {{ .Values.global.namespace }}
 spec:
-  clusterIP: None
+  type: ClusterIP
   selector:
     app: postgres
   ports:
