@@ -30,8 +30,8 @@ metadata:
   namespace: team3-ns
 type: Opaque
 data:
-  RABBITMQ_USER: Z3Vlc3Q=
-  RABBITMQ_PASSWORD: Z3Vlc3Q=
+  RABBITMQ_USER: "guest"
+  RABBITMQ_PASSWORD: "guest"
 ---
 apiVersion: apps/v1
 kind: Deployment
