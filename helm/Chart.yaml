@@ -4,12 +4,3 @@ description: A Helm chart for Event Management Kubernetes application
 type: application
 version: 0.1.0
 appVersion: "1.0"
-keywords:
-  - event-management
-  - kubernetes
-home: https://github.com/yourusername/event-management
-sources:
-  - https://github.com/yourusername/event-management
-maintainers:
-  - name: Your Name
-    email: your.email@example.com
