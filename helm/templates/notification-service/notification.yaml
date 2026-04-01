@@ -7,9 +7,9 @@ spec:
   selector:
     app: notification
   ports:
-  - port: 8006
-    targetPort: 8006
-  type: ClusterIP
+  - port: {{ .Values.notification.service.port }}
+    targetPort: {{ .Values.notification.service.port }}
+  type: {{ .Values.notification.service.type }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -17,11 +17,11 @@ metadata:
   name: notification-configmap
   namespace: team3-ns
 data:
-  PORT: "8006"
-  REDIS_HOST: "notification-redis"
-  REDIS_PORT: "6379"
-  RABBITMQ_HOST: "rabbitmq"
-  RABBITMQ_PORT: "5672"
+  PORT: {{ .Values.notification.env.port | quote }}
+  REDIS_HOST: {{ .Values.notification.env.redisHost | quote }}
+  REDIS_PORT: {{ .Values.notification.env.redisPort | quote }}
+  RABBITMQ_HOST: {{ .Values.notification.env.rabbitmqHost | quote }}
+  RABBITMQ_PORT: {{ .Values.notification.env.rabbitmqPort | quote }}
 ---
 apiVersion: v1
 kind: Secret
@@ -30,8 +30,8 @@ metadata:
   namespace: team3-ns
 type: Opaque
 stringData:
-  RABBITMQ_USER: "guest"
-  RABBITMQ_PASSWORD: "guest"
+  RABBITMQ_USER: {{ .Values.notification.secrets.rabbitmqUser | quote }}
+  RABBITMQ_PASSWORD: {{ .Values.notification.secrets.rabbitmqPassword | quote }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -42,7 +42,7 @@ spec:
   selector:
     matchLabels:
       app: notification
-  replicas: 1
+  replicas: {{ .Values.notification.replicaCount }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -55,10 +55,10 @@ spec:
     spec:
       containers:
       - name: notification-container
-        image: team3kubectl/notification-service:v1.1.1
-        imagePullPolicy: Always
+        image: "{{ .Values.notification.image.repository }}:{{ .Values.notification.image.tag }}"
+        imagePullPolicy: {{ .Values.notification.image.pullPolicy }}
         ports:
-        - containerPort: 8006
+        - containerPort: {{ .Values.notification.service.port }}
         envFrom:
         - configMapRef:
             name: notification-configmap
@@ -66,8 +66,8 @@ spec:
             name: notification-secret
         resources:
           requests:
-            cpu: "100m"
-            memory: "256Mi"
+            cpu: {{ .Values.notification.resources.requests.cpu | quote }}
+            memory: {{ .Values.notification.resources.requests.memory | quote }}
           limits:
-            cpu: "200m"
-            memory: "512Mi"
+            cpu: {{ .Values.notification.resources.limits.cpu | quote }}
+            memory: {{ .Values.notification.resources.limits.memory | quote }}

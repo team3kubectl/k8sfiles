@@ -4,8 +4,8 @@ metadata:
   name: events-config
   namespace: team3-ns
 data:
-  PORT: "8002"
-  MONGO_HOST:  events-mongodb
-  MONGO_PORT:  "27017"
-  MONGO_DB:  events_db
-  MONGO_URI: "mongodb://events-mongodb:27017/?maxPoolSize=10"
+  PORT: {{ .Values.events.env.port | quote }}
+  MONGO_HOST: {{ .Values.events.env.mongoHost | quote }}
+  MONGO_PORT: {{ .Values.events.env.mongoPort | quote }}
+  MONGO_DB: {{ .Values.events.env.mongoDb | quote }}
+  MONGO_URI: {{ .Values.events.env.mongoUri | quote }}

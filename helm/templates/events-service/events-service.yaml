@@ -4,9 +4,9 @@ metadata:
   name: events-service
   namespace: team3-ns
 spec:
-  type: ClusterIP
+  type: {{ .Values.events.service.type }}
   selector:
     app: events-service
   ports:
-    - port: 8002
-      targetPort: 8002
+    - port: {{ .Values.events.service.port }}
+      targetPort: {{ .Values.events.service.port }}
