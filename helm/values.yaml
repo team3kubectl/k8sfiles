@@ -1,0 +1,65 @@
+notification:
+  replicaCount: 1
+  image:
+    repository: team3kubectl/notification-service
+    tag: "v1.1.1"
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8006
+  env:
+    port: "8006"
+    redisHost: "notification-redis"
+    redisPort: "6379"
+    rabbitmqHost: "rabbitmq"
+    rabbitmqPort: "5672"
+  secrets:
+    rabbitmqUser: "guest"
+    rabbitmqPassword: "guest"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "200m"
+      memory: "512Mi"
+
+events:
+  replicaCount: 3
+  image:
+    repository: team3kubectl/events-service
+    tag: "v1.1.0"
+    pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 8002
+  env:
+    port: "8002"
+    mongoHost: "events-mongodb"
+    mongoPort: "27017"
+    mongoDb: "events_db"
+    mongoUri: "mongodb://events-mongodb:27017/?maxPoolSize=10"
+  secrets:
+    mongoUser: "admin"
+    mongoPassword: "adminpass"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "300m"
+      memory: "256Mi"
+  probes:
+    startup:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 5

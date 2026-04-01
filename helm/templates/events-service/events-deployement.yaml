@@ -6,7 +6,7 @@ metadata:
   labels:
     app: events-service
 spec:
-  replicas: 3
+  replicas: {{ .Values.events.replicaCount }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -22,10 +22,10 @@ spec:
     spec:
       containers:
         - name: events-service
-          image: team3kubectl/events-service:v1.1.0
-          imagePullPolicy: Always
+          image: "{{ .Values.events.image.repository }}:{{ .Values.events.image.tag }}"
+          imagePullPolicy: {{ .Values.events.image.pullPolicy }}
           ports:
-            - containerPort: 8002
+            - containerPort: {{ .Values.events.service.port }}
           envFrom:
             - configMapRef:
                 name: events-config
@@ -33,27 +33,27 @@ spec:
                 name: events-secret
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: {{ .Values.events.resources.requests.cpu | quote }}
+              memory: {{ .Values.events.resources.requests.memory | quote }}
             limits:
-              cpu: "300m"
-              memory: "256Mi"
+              cpu: {{ .Values.events.resources.limits.cpu | quote }}
+              memory: {{ .Values.events.resources.limits.memory | quote }}
           startupProbe:
             httpGet:
-              path: /health
-              port: 8002
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            failureThreshold: 30
+              path: {{ .Values.events.probes.startup.path }}
+              port: {{ .Values.events.service.port }}
+            initialDelaySeconds: {{ .Values.events.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.events.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.events.probes.startup.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /health
-              port: 8002
-            initialDelaySeconds: 10
-            periodSeconds: 5
+              path: {{ .Values.events.probes.readiness.path }}
+              port: {{ .Values.events.service.port }}
+            initialDelaySeconds: {{ .Values.events.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.events.probes.readiness.periodSeconds }}
           livenessProbe:
             httpGet:
-              path: /health
-              port: 8002
-            initialDelaySeconds: 10
-            periodSeconds: 5
+              path: {{ .Values.events.probes.liveness.path }}
+              port: {{ .Values.events.service.port }}
+            initialDelaySeconds: {{ .Values.events.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.events.probes.liveness.periodSeconds }}
