@@ -6,7 +6,7 @@ metadata:
     app: ai-service
   namespace: team3-ns
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
