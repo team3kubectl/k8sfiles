@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-config
+  namespace: team3-ns
+data:
+  NODE_ENV: "production"
+  PORT: "8008"
+
+  DB_HOST: "postgres-db"
+  DB_PORT: "5432"
+  DB_NAME: "eventdb"
+
+  JWT_EXPIRES_IN: "1d"
