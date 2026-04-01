@@ -12,8 +12,11 @@ data:
 
     # Function to create database if not exists
     create_database() {
-      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -tc "SELECT 1 FROM pg_database WHERE datname = '$1'" | grep -q 1 || \
-      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "CREATE DATABASE $1"
+        local database=$1
+        echo "Creating database '$database'"
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL || true
+            CREATE DATABASE $database;
+    EOSQL
     }
 
     # Create all databases
@@ -22,5 +25,6 @@ data:
     create_database ticket_db
     create_database events_db
     create_database users_db
+    create_database eventdb
 
     echo "All databases created successfully"
